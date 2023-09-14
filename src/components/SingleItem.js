@@ -2,6 +2,11 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { BsFillArrowLeftSquareFill } from "react-icons/bs";
+import Container from "react-bootstrap/Container";
+import Navbar from "react-bootstrap/Navbar";
+import animeL from "../assets/logo.png";
+import Button from "react-bootstrap/Button";
+import NewEdit from "./NewEdit";
 
 const SingleItem = () => {
   const { id } = useParams();
@@ -53,6 +58,24 @@ const SingleItem = () => {
   };
   return (
     <div className="animeItem">
+      {/* ------------------------------------Nav Bar------------------------------------ */}
+      <Navbar className="bg-dark">
+        <Container>
+          <Navbar.Brand href="#home">
+            <img src={animeL} alt="anime-logo" width={180} />
+          </Navbar.Brand>
+          <Navbar.Toggle />
+          <Navbar.Collapse className="justify-content-end">
+            <Link to={"/signin/:id"}>
+              <Button variant="outline-secondary" className="ps-10px">
+                Sign Out
+              </Button>{" "}
+            </Link>
+            <NewEdit id={id} />
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      {/* -------------------------------------------------------------------------------------- */}
       <div className="back " onClick={gBack}>
         <h3>
           <BsFillArrowLeftSquareFill className="b-icon" /> Back..
