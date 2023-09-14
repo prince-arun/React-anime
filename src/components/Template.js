@@ -15,7 +15,7 @@ const Template = () => {
 
   useEffect(() => {
     getAnimePictures(id);
-  }, [id]);
+  }, [getAnimePictures, id]);
 
   const navigate = useNavigate();
   const goBack = () => {
