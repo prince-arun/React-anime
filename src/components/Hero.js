@@ -102,6 +102,7 @@ const Hero = () => {
         setShow(false);
         navigate(`/signin/${id}`);
       });
+      console.log(userCredentials);
     } catch (error) {
       // setFormData({ ...formData, error: error.message, loading: false });
       setError(error.message);

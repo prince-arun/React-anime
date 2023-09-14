@@ -15,7 +15,7 @@ const Template = () => {
 
   useEffect(() => {
     getAnimePictures(id);
-  }, [id]);
+  }, [getAnimePictures, id]);
   return (
     <div className="gallery">
       <div className="back">
