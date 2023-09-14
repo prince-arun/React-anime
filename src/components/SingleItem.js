@@ -46,7 +46,7 @@ const SingleItem = () => {
   useEffect(() => {
     getAnime(id);
     getCharacters(id);
-  }, []);
+  }, [id]);
 
   const gBack = () => {
     navigate(-1);

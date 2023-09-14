@@ -5,18 +5,14 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
-import Badge from "react-bootstrap/Badge";
 import { db } from "../config/Config";
-import { ref, onValue, update, remove } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../config/Config";
 import {
   updateEmail,
-  updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
-  deleteUser,
-  onAuthStateChanged,
 } from "firebase/auth";
 
 const NewEdit = (props) => {
@@ -49,7 +45,7 @@ const NewEdit = (props) => {
     } catch (error) {
       console.log(error.message);
     }
-  }, []);
+  }, [id]);
 
   const handleSave = async (e) => {
     e.preventDefault();

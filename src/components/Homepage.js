@@ -15,11 +15,9 @@ const Homepage = () => {
   const {
     handleSubmit,
     search,
-    searchAnime,
     handleChange,
     getUpcomingAnime,
     getAiringAnime,
-    getPopularAnime,
   } = AnimeContext();
 
   const [getPopular, setRendered] = useState("popular");
