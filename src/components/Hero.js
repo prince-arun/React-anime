@@ -31,16 +31,37 @@ const Hero = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
-  //new corrections----------------------
   const [country, setCountry] = useState("");
   const [gender, setGender] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePictureURL, setProfilePictureURL] = useState("");
   const [imId, setImId] = useState("");
-  //-------------------------------------------
+  //-----------------------------
+  //******************************
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [ageError, setAgeError] = useState("");
+  const [countryError, setCountryError] = useState("");
+  const [genderError, setGenderError] = useState("");
+  const [agreedError, setAgreedError] = useState("");
+  const [profilePictureError, setProfilePictureError] = useState("");
 
-  const [error, setError] = useState(null); // Add error state
+  const handleInputChange = () => {
+    // setError(null); // Clear error when user starts typing
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setAgeError("");
+    setCountryError("");
+    setGenderError("");
+    setAgreedError("");
+    setProfilePictureError("");
+  };
+  //******************************
+
+  // const [error, setError] = useState(null); // Add error state
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -62,74 +83,138 @@ const Hero = () => {
 
   const handleClose = async (e) => {
     e.preventDefault();
-    // --------validation-----------
-
-    setError(null); // Clear error when attempting registration
     setLoading(true);
-    if (!userName || !email || !password || !age) {
-      setError("All fields are required");
+
+    // ***************************************************************
+    let isValid = true;
+    if (userName.length < 3) {
+      setNameError("Username must be at least 3 characters long");
+      isValid = false;
       setLoading(false);
-      return;
     }
 
-    //--------------------------------
+    const isValidEmail = (email) => {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return emailRegex.test(email);
+    };
+    if (!isValidEmail(email)) {
+      setEmailError("Invalid email format");
+      isValid = false;
+      setLoading(false);
+    }
+    const validatePassword = (password) => {
+      const passwordError = [];
 
-    if (profilePicture) {
+      if (password.length < 8) {
+        passwordError.push("Password must be 8 characters long");
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        passwordError.push("Should contain one capital letter");
+      }
+
+      if (!/\d/.test(password)) {
+        passwordError.push("Should contain at least one number");
+      }
+
+      if (!/[@$!%*?&]/.test(password)) {
+        passwordError.push("should contain one special character");
+      }
+
+      return passwordError;
+    };
+    const passwordError = validatePassword(password);
+    if (passwordError.length > 0) {
+      setPasswordError(passwordError);
+      isValid = false;
+      setLoading(false);
+    }
+
+    if (age < 6 || age > 150) {
+      setAgeError("Age should be between 6 and 150");
+      isValid = false;
+      setLoading(false);
+    }
+
+    if (!country) {
+      setCountryError("Please select a country");
+      isValid = false;
+      setLoading(false);
+    }
+    if (!gender) {
+      setGenderError("Please select a gender");
+      isValid = false;
+      setLoading(false);
+    }
+
+    if (!agreed) {
+      setAgreedError("Please agree to the terms and conditions");
+      isValid = false;
+      setLoading(false);
+    }
+
+    if (!profilePicture) {
+      setProfilePictureError("Please select a profile picture");
+      isValid = false;
+      setLoading(false);
+    }
+
+    // ***************************************************************
+    if (isValid) {
+      if (profilePicture) {
+        try {
+          const storageRef = refi(
+            storage,
+            `profilePictures/${imId}/${profilePicture.name}`
+          );
+          await uploadBytes(storageRef, profilePicture);
+
+          // Get the download URL of the uploaded profile picture
+          const downloadURL = await getDownloadURL(storageRef);
+          console.log(downloadURL);
+
+          // Set the download URL in your state and user data
+          setProfilePictureURL(downloadURL);
+          regUser.ProfilePictureURL = downloadURL; // Add this line to your user data
+          //==============================
+          const pathSegments = storageRef._location.path.split("/");
+          const path = pathSegments.slice(1).join("/"); // Exclude the first empty element
+          regUser.ProfilePicturePath = path;
+          //==============================
+        } catch (error) {
+          console.error("Error uploading profile picture:", error);
+          setLoading(false);
+          return;
+        }
+      }
+      //--------------------------------
+
       try {
-        const storageRef = refi(
-          storage,
-          `profilePictures/${imId}/${profilePicture.name}`
-        );
-        await uploadBytes(storageRef, profilePicture);
+        const userCredentials = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        ).then((success) => {
+          const id = success.user.uid;
+          setImId(id);
+          console.log(regUser);
+          set(ref(db, "RegUser/" + id), regUser);
+          alert("User Created Successfully  ");
 
-        // Get the download URL of the uploaded profile picture
-        const downloadURL = await getDownloadURL(storageRef);
-        console.log(downloadURL);
+          // setError(null); // Clear error after successful registration
+          setLoading(false);
 
-        // Set the download URL in your state and user data
-        setProfilePictureURL(downloadURL);
-        regUser.ProfilePictureURL = downloadURL; // Add this line to your user data
-        //==============================
-        const pathSegments = storageRef._location.path.split("/");
-        const path = pathSegments.slice(1).join("/"); // Exclude the first empty element
-        regUser.ProfilePicturePath = path;
-        //==============================
+          //-------------------------
+          setShow(false);
+          navigate(`/signin/${id}`);
+        });
+        console.log(userCredentials);
       } catch (error) {
-        console.error("Error uploading profile picture:", error);
+        // setError(error.message);
         setLoading(false);
-        return;
+        console.log(error);
       }
     }
-    //--------------------------------
-
-    try {
-      const userCredentials = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      ).then((success) => {
-        const id = success.user.uid;
-        setImId(id);
-        console.log(regUser);
-        set(ref(db, "RegUser/" + id), regUser);
-        alert("User Created Successfully  ");
-
-        setError(null); // Clear error after successful registration
-        setLoading(false);
-
-        //-------------------------
-        setShow(false);
-        navigate(`/signin/${id}`);
-      });
-      console.log(userCredentials);
-    } catch (error) {
-      setError(error.message);
-      setLoading(false);
-      console.log(error);
-    }
-  };
-  const handleInputChange = () => {
-    setError(null); // Clear error when user starts typing
   };
 
   return (
@@ -158,7 +243,7 @@ const Hero = () => {
                 <Modal.Body>
                   <Form>
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlInput1"
                     >
                       <Form.Label>Username</Form.Label>
@@ -171,9 +256,10 @@ const Hero = () => {
                           handleInputChange();
                         }}
                       />
+                      {nameError && <p className="error">{nameError}</p>}
                     </Form.Group>
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlInput1"
                     >
                       <Form.Label>Age</Form.Label>
@@ -186,9 +272,10 @@ const Hero = () => {
                           handleInputChange();
                         }}
                       />
+                      {ageError && <p className="error">{ageError}</p>}
                     </Form.Group>
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlInput1"
                     >
                       <Form.Label>Email address</Form.Label>
@@ -201,9 +288,10 @@ const Hero = () => {
                           handleInputChange();
                         }}
                       />
+                      {emailError && <p className="error">{emailError}</p>}
                     </Form.Group>
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlInput1"
                     >
                       <Form.Label>Password</Form.Label>
@@ -216,10 +304,19 @@ const Hero = () => {
                           handleInputChange();
                         }}
                       />
+                      {passwordError.length > 0 && (
+                        <div className="error">
+                          <ul>
+                            {passwordError.map((error, index) => (
+                              <li key={index}>{error}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </Form.Group>
-                    {/* ---------------------------- */}
+
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlSelect1"
                     >
                       <Form.Label>Country</Form.Label>
@@ -469,10 +566,10 @@ const Hero = () => {
                         <option value="Zimbabwe">Zimbabwe</option>
                         {/*========================================================== */}
                       </Form.Control>
+                      {countryError && <p className="error">{countryError}</p>}
                     </Form.Group>
-
                     <Form.Group
-                      className="mb-3"
+                      className="mb-1"
                       controlId="exampleForm.ControlSelect2"
                     >
                       <Form.Label>Gender</Form.Label>
@@ -507,10 +604,9 @@ const Hero = () => {
                             handleInputChange();
                           }}
                         />
-                        {/* Add more gender options as needed */}
                       </div>
+                      {genderError && <p className="error">{genderError}</p>}
                     </Form.Group>
-
                     <Form.Group
                       className="mb-3"
                       controlId="exampleForm.ControlCheckbox1"
@@ -523,6 +619,7 @@ const Hero = () => {
                           handleInputChange();
                         }}
                       />
+                      {agreedError && <p className="error">{agreedError}</p>}
                     </Form.Group>
                     <Form.Group controlId="profilePicture">
                       <Form.Label>Profile Picture</Form.Label>
@@ -531,11 +628,11 @@ const Hero = () => {
                         accept="image/*"
                         onChange={handleProfilePictureChange}
                       />
+                      {profilePictureError && (
+                        <p className="error">{profilePictureError}</p>
+                      )}
                     </Form.Group>
 
-                    {/* -------------------------------- */}
-
-                    {error ? <p className="error">{error}</p> : null}
                     <Button
                       variant="primary"
                       type="submit"
