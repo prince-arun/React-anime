@@ -13,6 +13,8 @@ import anime_cover_2 from "../assets/anime_cover_2.jpg";
 import anime_cover_3 from "../assets/anime_cover_3.jpg";
 import { auth } from "../config/Config";
 import { db } from "../config/Config";
+import { storage } from "../config/Config";
+import { ref as refi, uploadBytes, getDownloadURL } from "firebase/storage";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
@@ -33,12 +35,16 @@ const Hero = () => {
   const [country, setCountry] = useState("");
   const [gender, setGender] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureURL, setProfilePictureURL] = useState("");
+  const [imId, setImId] = useState("");
   //-------------------------------------------
 
   const [error, setError] = useState(null); // Add error state
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  console.log(profilePictureURL);
   let regUser = {
     Username: userName,
     Email: email,
@@ -47,11 +53,16 @@ const Hero = () => {
     Gender: gender,
     Agreed: agreed,
   };
+  //-----------------------------------------
+  const handleProfilePictureChange = (e) => {
+    const imageFile = e.target.files[0];
+    setProfilePicture(imageFile);
+  };
+  //----------------------------------------
 
   const handleClose = async (e) => {
     e.preventDefault();
     // --------validation-----------
-    // setFormData({ ...formData, error: null, loading: true });
 
     setError(null); // Clear error when attempting registration
     setLoading(true);
@@ -63,6 +74,34 @@ const Hero = () => {
 
     //--------------------------------
 
+    if (profilePicture) {
+      try {
+        const storageRef = refi(
+          storage,
+          `profilePictures/${imId}/${profilePicture.name}`
+        );
+        await uploadBytes(storageRef, profilePicture);
+
+        // Get the download URL of the uploaded profile picture
+        const downloadURL = await getDownloadURL(storageRef);
+        console.log(downloadURL);
+
+        // Set the download URL in your state and user data
+        setProfilePictureURL(downloadURL);
+        regUser.ProfilePictureURL = downloadURL; // Add this line to your user data
+        //==============================
+        const pathSegments = storageRef._location.path.split("/");
+        const path = pathSegments.slice(1).join("/"); // Exclude the first empty element
+        regUser.ProfilePicturePath = path;
+        //==============================
+      } catch (error) {
+        console.error("Error uploading profile picture:", error);
+        setLoading(false);
+        return;
+      }
+    }
+    //--------------------------------
+
     try {
       const userCredentials = await createUserWithEmailAndPassword(
         auth,
@@ -70,6 +109,7 @@ const Hero = () => {
         password
       ).then((success) => {
         const id = success.user.uid;
+        setImId(id);
         console.log(regUser);
         set(ref(db, "RegUser/" + id), regUser);
         alert("User Created Successfully  ");
@@ -85,7 +125,7 @@ const Hero = () => {
     } catch (error) {
       setError(error.message);
       setLoading(false);
-      console.log(error.message);
+      console.log(error);
     }
   };
   const handleInputChange = () => {
@@ -484,6 +524,15 @@ const Hero = () => {
                         }}
                       />
                     </Form.Group>
+                    <Form.Group controlId="profilePicture">
+                      <Form.Label>Profile Picture</Form.Label>
+                      <Form.Control
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureChange}
+                      />
+                    </Form.Group>
+
                     {/* -------------------------------- */}
 
                     {error ? <p className="error">{error}</p> : null}

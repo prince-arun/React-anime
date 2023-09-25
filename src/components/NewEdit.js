@@ -6,9 +6,17 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import { db } from "../config/Config";
+import Image from "react-bootstrap/Image";
 import { ref, onValue, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../config/Config";
+import { storage } from "../config/Config";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import {
   updateEmail,
   reauthenticateWithCredential,
@@ -21,6 +29,8 @@ const NewEdit = (props) => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
+  const [newProfilePicture, setNewProfilePicture] = useState(null);
+
   const navigate = useNavigate();
   let { id } = props;
   const [show, setShow] = useState(false);
@@ -29,10 +39,20 @@ const NewEdit = (props) => {
   const handleShow = () => setShow(true);
 
   const [getUserData, setGetUserData] = useState([]);
+  const [profilePictureUrl, setProfilePictureUrl] = useState("");
 
   console.log(getUserData);
   //Getting data -------------------------------------
-
+  //------
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Set the new profile picture in state
+      setNewProfilePicture(file);
+    }
+  };
+  const profilePicturePath = getUserData?.ProfilePicturePath;
+  //-----
   useEffect(() => {
     try {
       let userDetails = ref(db, "RegUser/" + id);
@@ -40,6 +60,7 @@ const NewEdit = (props) => {
         let data = snapshot.val();
 
         setGetUserData(data);
+        setProfilePictureUrl(data?.ProfilePictureURL || "");
       });
     } catch (error) {
       console.log(error.message);
@@ -68,6 +89,12 @@ const NewEdit = (props) => {
     if (country !== "") {
       userData.Country = country;
     }
+    if (profilePictureUrl !== "") {
+      userData.ProfilePictureURL = profilePictureUrl;
+    }
+    if (profilePicturePath !== "") {
+      userData.ProfilePicturePath = profilePicturePath;
+    }
 
     const currentPassword = prompt("Please enter your current password:");
 
@@ -87,6 +114,35 @@ const NewEdit = (props) => {
           console.log(error);
         });
 
+      const currentProfilePictureUrl = getUserData.ProfilePictureURL;
+      // =========================================
+
+      // if (getUserData?.ProfilePicturePath) {
+      //   const oldProfilePictureRef = storageRef(
+      //     storage,
+      //     getUserData.ProfilePicturePath
+      //   );
+
+      //   // Delete the old profile picture
+      //   await deleteObject(oldProfilePictureRef);
+      // }
+      //==========================================
+      if (newProfilePicture) {
+        // Upload the new profile picture to Firebase Storage
+        const profilePictureRef = storageRef(storage, `profilePictures/${id}`);
+        await uploadBytes(profilePictureRef, newProfilePicture);
+
+        // Get the download URL of the uploaded profile picture
+        const downloadUrl = await getDownloadURL(profilePictureRef);
+
+        // Update the ProfilePictureURL in the Realtime Database
+        userData.ProfilePictureURL = downloadUrl;
+        setProfilePictureUrl(downloadUrl);
+        setNewProfilePicture(null);
+      } else {
+        userData.ProfilePictureURL = currentProfilePictureUrl;
+      }
+      //==========================================
       if (Object.keys(userData).length > 0) {
         await update(ref(db, "RegUser/" + id), userData);
         alert("Details updated successfully");
@@ -107,6 +163,14 @@ const NewEdit = (props) => {
 
     if (confirmDelete) {
       try {
+        // =========================================
+        // Use the correct path field
+        const profilePictureRef = storageRef(
+          storage,
+          `profilePictures/${profilePicturePath}`
+        );
+        await deleteObject(profilePictureRef);
+        //==================================
         const user = auth.currentUser;
         await user.delete();
 
@@ -117,6 +181,8 @@ const NewEdit = (props) => {
           Country: null,
           Gender: null,
           Agreed: null,
+          ProfilePictureURL: null,
+          ProfilePicturePath: null,
         });
 
         alert("Account deleted successfully");
@@ -133,9 +199,20 @@ const NewEdit = (props) => {
   }
   return (
     <div className="editProfile">
-      <Button variant="outline-warning" onClick={handleShow} className="ms-3">
+      {/* <Button variant="outline-warning" onClick={handleShow} className="ms-3">
         My Profile
-      </Button>
+      </Button> */}
+      <Image
+        className="ms-5 shadow bg-white"
+        onClick={handleShow}
+        src={getUserData.ProfilePictureURL}
+        roundedCircle
+        width={70}
+        height={70}
+        style={{
+          cursor: "pointer",
+        }}
+      />
 
       <Offcanvas show={show} onHide={handleClose} placement={"end"}>
         <Offcanvas.Header
@@ -145,6 +222,16 @@ const NewEdit = (props) => {
           <Offcanvas.Title>Edit Profile. . . . .</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body className="bg-dark">
+          {/* ----------------------------- */}
+          <div className="text-center">
+            <img
+              src={getUserData.ProfilePictureURL}
+              alt="dp"
+              className="mb-3"
+              style={{ maxWidth: "100px" }}
+            />
+          </div>
+          {/* ----------------------------- */}
           <Form>
             <Row>
               <Form.Label column="sm" lg={4} className="text-light">
@@ -232,6 +319,20 @@ const NewEdit = (props) => {
                     setCountry(e.target.value);
                   }}
                 />
+              </Col>
+            </Row>
+            <Row>
+              <Form.Label column="sm" lg={4} className="text-light">
+                Profile Picture:
+              </Form.Label>
+              <Col>
+                <Form.Group controlId="profilePicture">
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProfilePictureChange(e)}
+                  />
+                </Form.Group>
               </Col>
             </Row>
             {/* ------------------------------------- */}
