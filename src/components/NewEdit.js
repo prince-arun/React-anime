@@ -17,11 +17,10 @@ import {
 
 const NewEdit = (props) => {
   const [userName, setUserName] = useState("");
-
   const [email, setEmail] = useState("");
-
   const [age, setAge] = useState("");
-
+  const [gender, setGender] = useState("");
+  const [country, setCountry] = useState("");
   const navigate = useNavigate();
   let { id } = props;
   const [show, setShow] = useState(false);
@@ -62,6 +61,12 @@ const NewEdit = (props) => {
 
     if (age !== "") {
       userData.Age = age;
+    }
+    if (gender !== "") {
+      userData.Gender = gender;
+    }
+    if (country !== "") {
+      userData.Country = country;
     }
 
     const currentPassword = prompt("Please enter your current password:");
@@ -107,10 +112,11 @@ const NewEdit = (props) => {
 
         await update(ref(db, "RegUser/" + id), {
           Username: null,
-
           Email: null,
-
           Age: null,
+          Country: null,
+          Gender: null,
+          Agreed: null,
         });
 
         alert("Account deleted successfully");
@@ -193,6 +199,42 @@ const NewEdit = (props) => {
                 />
               </Col>
             </Row>
+            {/* ------------------------------------- */}
+            <Row>
+              <Form.Label column="sm" lg={4} className="text-light">
+                Gender :
+              </Form.Label>
+              <Col>
+                <Form.Control
+                  size="md"
+                  className="w-55 mb-3"
+                  type="text"
+                  placeholder="Gender"
+                  defaultValue={getUserData.Gender || ""}
+                  onChange={(e) => {
+                    setGender(e.target.value);
+                  }}
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Form.Label column="sm" lg={4} className="text-light">
+                Country :
+              </Form.Label>
+              <Col>
+                <Form.Control
+                  size="md"
+                  className="w-55 mb-3"
+                  type="text"
+                  placeholder="Country"
+                  defaultValue={getUserData.Country || ""}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                  }}
+                />
+              </Col>
+            </Row>
+            {/* ------------------------------------- */}
 
             <Button variant="success" type="submit" onClick={handleSave}>
               Save
