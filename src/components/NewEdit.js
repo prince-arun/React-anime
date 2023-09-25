@@ -227,8 +227,9 @@ const NewEdit = (props) => {
             <img
               src={getUserData.ProfilePictureURL}
               alt="dp"
-              className="mb-3"
-              style={{ maxWidth: "100px" }}
+              className="mb-3 dp"
+              width={100}
+              height={100}
             />
           </div>
           {/* ----------------------------- */}
