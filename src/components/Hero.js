@@ -239,6 +239,7 @@ const Hero = () => {
               <Modal show={show} onHide={() => setShow(false)}>
                 <Modal.Header closeButton>
                   <Modal.Title>Register...</Modal.Title>
+                  <small className="ms-5 tUser">Test user Login Below</small>
                 </Modal.Header>
                 <Modal.Body>
                   <Form>

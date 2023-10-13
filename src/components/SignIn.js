@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import animeL from "../assets/logo.png";
 import Container from "react-bootstrap/Container";
 import Navbar from "react-bootstrap/Navbar";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Popover from "react-bootstrap/Popover";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -52,6 +54,20 @@ const SignIn = () => {
   const handleBlur = () => {
     setError(null); // Clear error when input loses focus
   };
+
+  const popover = (
+    <Popover id="popover-basic">
+      <Popover.Header as="h3">Test Credentials</Popover.Header>
+      <Popover.Body>
+        <p>
+          <strong>Email : </strong> steve@gmail.com
+        </p>
+        <p>
+          <strong>Password : </strong> Steve@1234
+        </p>
+      </Popover.Body>
+    </Popover>
+  );
   return (
     <div>
       {/* ---------------navbar------------- */}
@@ -118,6 +134,15 @@ const SignIn = () => {
                 </Link>
               </Form.Label>
             </Form>
+            <OverlayTrigger
+              trigger="click"
+              placement="bottom"
+              overlay={popover}
+            >
+              <Button className="mt-3 px-3" variant="success">
+                Test Credentials
+              </Button>
+            </OverlayTrigger>
           </Card.Body>
         </Card>
       </div>
