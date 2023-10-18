@@ -228,14 +228,19 @@ const Hero = () => {
           <Navbar.Toggle />
           <Navbar.Collapse className="justify-content-end">
             <Navbar.Text>
+              <Link to={"/signin/:id"}>
+                <Button variant="success" className="me-4">
+                  Test Login
+                </Button>{" "}
+              </Link>
+
               <Button
                 variant="primary"
                 onClick={handleShow}
                 className="px-4 py-2"
               >
-                Sign up
+                New Account ?
               </Button>
-
               <Modal show={show} onHide={() => setShow(false)}>
                 <Modal.Header closeButton>
                   <Modal.Title>Register...</Modal.Title>
